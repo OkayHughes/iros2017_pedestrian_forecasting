@@ -141,16 +141,16 @@ if __name__ == "__main__":
     pass
     #test measurement_given_x0, ensure it's constant
 
-    print "Actual answer: "
-    print x_given_k(np.array([[1, 0], [0,0], [1, 2]]), 0)
+    print("Actual answer: ")
+    print(x_given_k(np.array([[1, 0], [0,0], [1, 2]]), 0))
     
-    print "testing x_given_lin:"
+    print("testing x_given_lin:")
     x = np.zeros((2,3))
     x[0,1] = scene.width/2.0 + 0.1
     x[1,2] = scene.height/2.0 + 0.01
-    print "Computed answer = " + str(x_given_lin(x))
+    print("Computed answer = " + str(x_given_lin(x)))
     expected_answer = [1.0/(scene.width*scene.height), 0.0, 0.0]
-    print "Expected answer = " + str(expected_answer)
+    print("Expected answer = " + str(expected_answer))
 
 
     x_span = np.linspace( - scene_scale[0]/2, scene_scale[0]/2, 200)
@@ -158,6 +158,6 @@ if __name__ == "__main__":
     dvol = (x_span[1]-x_span[0])*(y_span[1]-y_span[0])
     X,Y = np.meshgrid(x_span, y_span)
     x_arr = np.vstack( [X.flatten(), Y.flatten() ] )
-    print "\int{P(x|k) dx} =" + str(x_given_k(x_arr,0).sum() * dvol)
-    print "Should equal 1"
+    print("\int{P(x|k) dx} =" + str(x_given_k(x_arr,0).sum() * dvol))
+    print("Should equal 1")
 

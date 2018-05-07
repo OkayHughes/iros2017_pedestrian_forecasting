@@ -10,6 +10,7 @@ Ensure that `scipy` is the most recent version available on your OS.
 
 ## Usage ##
 
+The `train_example.py` file in `code/example` will train a sample model, and show how to plot the relevant quantities that are calculated by our model. 
 
 ### Making sure your data is formatted correctly ###
 
@@ -72,13 +73,11 @@ The non-linear weights are treated as dirac deltas convolved with gaussians of s
 
 
 
-## Files
+## Reproduce
 
-While a particularly masochistic person could use the code in `reproduce` in their own project, I believe that all that needs to be documented about that folder is that you can reproduce the analysis from the paper by running `python analysis.py`, and looking in `output`. I'll document this further once I've actually written the files.
+The `reproduce` folder contains a number of files that were used to do the analysis for the paper. Due to the tight deadline, very few of the files that run the actual analysis are well documented. It is preserved here for posterity, but most of the helper functions in the folder should just be rewritten. 
 
 To actually use the good version of our code, look in `code`.
-
-### `data.py`
 
 
 ## Contributors

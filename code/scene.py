@@ -68,7 +68,7 @@ class Scene():
                 k_max=k_max_alpha)
         self.alpha_arr = alpha_arr
         self.P_of_c = P_of_c
-        print P_of_c
+        print(P_of_c)
         self.width = width
         self.height = height
         self.clusters = clusters
@@ -112,7 +112,7 @@ class Scene():
                 kappa_per_class[k] = min( forward_std, backward_std )
             kappa_per_curve[i] = kappa_per_class.min()
         self.kappa = kappa_per_curve.mean()
-        print "kappa = %f" % self.kappa
+        print("kappa = %f" % self.kappa)
 
     #--------------------------------------------------------------------------
     # METHODS
@@ -201,7 +201,7 @@ class Scene():
 
 
 if __name__ == "__main__":
-    print "Testing initializer"
+    print("Testing initializer")
     
     folder = '../annotations/coupa/video2/'
     BB_ts_list, width, height = process_data.get_BB_ts_list(folder,label="Biker")
@@ -211,15 +211,15 @@ if __name__ == "__main__":
     train_set, test_set = train_test_split( BB_ts_list, random_state = 0 )
 
     test_scene = Scene( train_set, width, height )
-    print "Display clusters"
+    print("Display clusters")
     for k in range( test_scene.num_nl_classes ):
         from visualization_routines import visualize_cluster
         visualize_cluster( test_scene, k )
    
-    print "P(k) = "
-    print test_scene.P_of_c
+    print("P(k) = ")
+    print(test_scene.P_of_c)
 
-    print "\sum_k P(k) = {}".format( test_scene.P_of_c.sum())
+    print("\sum_k P(k) = {}".format( test_scene.P_of_c.sum()))
     response = raw_input("Would you like to pickle this scene? y/n")
     if response == "y":
         with open("test_scene.pkl", "ws") as f:

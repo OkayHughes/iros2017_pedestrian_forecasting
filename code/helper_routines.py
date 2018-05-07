@@ -12,6 +12,15 @@ def ct(scene, width):
     cty = int(np.ceil(scene.height/width))
     return ctx, cty
 
+def stupid_sum(pts, weights, bbox_ls):
+    #bbox_ls = sorted(bbox_ls, key=lambda x: x[0])
+    #order = np.argsort(pts[0])
+    #Garbage one-liner
+    filt = lambda x, z: np.logical_and((z[0] > x[0]), (z[0] < x[1]), (z[1] > x[2]), (z[1] < x[3]))
+    return [sum(weights[np.where(filt(bbox, pts))[0]]) for bbox in bbox_ls]
+
+
+
 def convolve_and_score( pts, weights, sigma, bbox_ls):
     """ Smooths a singular distribution, and integrates it over a list of bboxes
 
