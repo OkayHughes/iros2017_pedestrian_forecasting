@@ -1,9 +1,16 @@
-import numpy as np
+"""Director Field module
+
+This module contains the functions necessary for managing unit-length vector fields.
+
+"""
+from functools import reduce
+from numpy.polynomial import polynomial
 from numpy.polynomial.legendre import legval2d, legder
-#NOTE:  This needs to be refactored so that scaling conventions are consistent with the rest of the code base
+import numpy as np
+
 regularization_coefficient = 1.0
 
-def get_angle( points, alpha, k_max, width, height):
+def get_angle(points, alpha, k_max, width, height):
     """ Return angle at points given Legendre coefficients
 
     args:
@@ -13,11 +20,10 @@ def get_angle( points, alpha, k_max, width, height):
     returns:
         angle (numpy.ndarray): an array of shape (N,)
     """
-    alpha = alpha.reshape( (k_max+1, k_max+1) )
-    from numpy.polynomial.legendre import legval2d
-    return legval2d( points[0] / width , points[1] / height, alpha ) 
+    alpha = alpha.reshape((k_max+1, k_max+1))
+    return legval2d(points[0] / width, points[1] / height, alpha)
 
-def jac_get_angle( points, alpha, k_max, width, height ):
+def jac_get_angle(points, alpha, k_max, width, height):
     """ Return sensitivity of angle at points with respec to Legendre coefficients
 
     args:
@@ -29,19 +35,20 @@ def jac_get_angle( points, alpha, k_max, width, height ):
         angle (numpy.ndarray): an array of shape (N_points, k_max+1, k_max+1)
     """
     N_points = points.shape[1]
-    alpha = alpha.reshape( (k_max+1, k_max+1) )
+    alpha = alpha.reshape((k_max+1, k_max+1))
     x = points[0]
     y = points[1]
-    Leg = np.ones( (N_points, k_max + 1, k_max + 1) )
-    Leg[:,1,0] = x/ width
-    for i in range(1,k_max):
-        Leg[:,i+1,0] = ( (2*i+1)*x*Leg[:,i,0]/width -i*Leg[:,i-1,0]) / float(i+1)
-    Leg[:,:,1] = np.einsum('pj,p->pj', Leg[:,:,0], y/ height )
-    for j in range(1,k_max):
-        Leg[:,:,j+1] = ( (2*j+1)*np.einsum('pj,p->pj',Leg[:,:,j], y/height) - j*Leg[:,:,j-1] ) / float(j+1)
+    Leg = np.ones((N_points, k_max + 1, k_max + 1))
+    Leg[:, 1, 0] = x / width
+    for i in range(1, k_max):
+        Leg[:, i+1, 0] = ((2*i+1) * x * Leg[:, i, 0] / width - i * Leg[:, i-1, 0]) / float(i+1)
+    Leg[:, :, 1] = np.einsum('pj,p->pj', Leg[:, :, 0], y / height)
+    for j in range(1, k_max):
+        Leg[:, :, j+1] = ((2*j+1) * np.einsum('pj,p->pj', Leg[:, :, j], y / height)
+                          - j * Leg[:, :, j-1]) / float(j+1)
     return Leg
 
-def cost( alpha, points, directions, k_max, width, height ):
+def cost(alpha, points, directions, k_max, width, height):
     """ Returns the cost of a director field
 
     args:
@@ -55,12 +62,12 @@ def cost( alpha, points, directions, k_max, width, height ):
     return:
         total_cost (float)
     """
-    theta = get_angle( points , alpha, k_max, width, height )
-    out = -( directions[0]*np.cos( theta)+directions[1]*np.sin(theta) ).sum() 
-    out += regularization_coefficient*regularization( alpha, k_max )
+    theta = get_angle(points, alpha, k_max, width, height)
+    out = -(directions[0] * np.cos(theta) + directions[1] * np.sin(theta)).sum()
+    out += regularization_coefficient*regularization(alpha, k_max)
     return out
 
-def jac_cost( alpha, points, directions, k_max, width, height):
+def jac_cost(alpha, points, directions, k_max, width, height):
     """ Returns the sensitivity of cost wrt alpha
 
     args:
@@ -76,12 +83,14 @@ def jac_cost( alpha, points, directions, k_max, width, height):
     """
     theta = get_angle(points, alpha, k_max, width, height)
     jac_theta = jac_get_angle(points, alpha, k_max, width, height)
-    out = np.einsum('k,kij', directions[0]*np.sin(theta)-directions[1]*np.cos(theta) , jac_theta).flatten()
-    out += regularization_coefficient * jac_regularization( alpha, k_max ).flatten()
+    out = np.einsum('k,kij',
+                    directions[0] * np.sin(theta) - directions[1] * np.cos(theta),
+                    jac_theta).flatten()
+    out += regularization_coefficient * jac_regularization(alpha, k_max).flatten()
     return out
 
 
-def regularization( alpha, k_max ):
+def regularization(alpha, k_max):
     """ Returns a regularization term to penalize coefficients of alpha
 
     args:
@@ -91,13 +100,13 @@ def regularization( alpha, k_max ):
     return:
         out (float)
     """
-    k_span = np.arange( k_max + 1 )
-    alpha = alpha.reshape( (k_max+1, k_max+1) )
-    return np.einsum( 'ij,i,j', 0.5*alpha**2, k_span**2 +1, k_span**2 +1 )
+    k_span = np.arange(k_max + 1)
+    alpha = alpha.reshape((k_max+1, k_max+1))
+    return np.einsum('ij,i,j', 0.5 * alpha**2, k_span**2 + 1, k_span**2 + 1)
 
 
-def jac_regularization( alpha, k_max ):
-    """ Returns the jacobian of the regularization term 
+def jac_regularization(alpha, k_max):
+    """ Returns the jacobian of the regularization term
 
     args:
         alpha (numpy.ndarray): size=(k_max+1)**2
@@ -106,12 +115,12 @@ def jac_regularization( alpha, k_max ):
     return:
         out (numpy.ndarray): out.shape == alpha.shape
     """
-    k_span = np.arange( k_max + 1)
-    alpha = alpha.reshape( (k_max+1, k_max+1) )
-    return np.einsum('ij,i,j->ij', alpha, k_span**2+1, k_span**2+1).reshape( alpha.shape )
+    k_span = np.arange(k_max + 1)
+    alpha = alpha.reshape((k_max+1, k_max+1))
+    return np.einsum('ij,i,j->ij', alpha, k_span**2 + 1, k_span**2 + 1).reshape(alpha.shape)
 
 
-def trajectory_to_directors( trajectory, step = 5 ):
+def trajectory_to_directors(trajectory, step=5):
     """ returns directors along a given trajectory
 
     args:
@@ -125,20 +134,20 @@ def trajectory_to_directors( trajectory, step = 5 ):
         v (numpy.ndarray): y-component of direction
     """
     n = trajectory.shape[1]
-    x = 0.5*(trajectory[0,step::step] + trajectory[0,:n-step:step])
-    y = 0.5*(trajectory[1,step::step] + trajectory[1,:n-step:step])
-    u = trajectory[0,step::step] - trajectory[0,:n-step:step]
-    v = trajectory[1,step::step] - trajectory[1,:n-step:step]
-    speed = np.sqrt(u**2 + v**2) 
+    x = 0.5 * (trajectory[0, step::step] + trajectory[0, :n-step:step])
+    y = 0.5 * (trajectory[1, step::step] + trajectory[1, :n-step:step])
+    u = trajectory[0, step::step] - trajectory[0, :n-step:step]
+    v = trajectory[1, step::step] - trajectory[1, :n-step:step]
+    speed = np.sqrt(u**2 + v**2)
     remove_baddies = lambda x: x[np.nonzero(speed)]
     x = remove_baddies(x)
     y = remove_baddies(y)
     u = remove_baddies(u)
     v = remove_baddies(v)
     speed = remove_baddies(speed)
-    return np.vstack([x,y]), np.vstack([u,v])/speed 
+    return np.vstack([x, y]), np.vstack([u, v]) / speed
 
-def ode_function( xy, t, alpha, width, height, speed=1.0):
+def ode_function(xy, t, alpha, width, height, speed=1.0):
     """ returns velocity feild for input into odeint
 
     args:
@@ -151,12 +160,12 @@ def ode_function( xy, t, alpha, width, height, speed=1.0):
     """
     x = xy[0]
     y = xy[1]
-    theta = legval2d( x / width, y / height, alpha )
-    out = speed*np.array( [np.cos(theta), np.sin(theta) ] )
+    theta = legval2d(x / width, y / height, alpha)
+    out = speed*np.array([np.cos(theta), np.sin(theta)])
     return out
 
 
-def jac_ode_function( xy, t, alpha, width, height, speed=1.0 ):
+def jac_ode_function(xy, t, alpha, width, height, speed=1.0):
     """ returns velocity feild for input into odeint
 
     args:
@@ -169,39 +178,49 @@ def jac_ode_function( xy, t, alpha, width, height, speed=1.0 ):
     """
     x = xy[0]
     y = xy[1]
-    theta = legval2d( x / width, y / height, alpha )
-    theta_x = legval2d( x / width, y / height, legder( alpha, axis=0) ) / width
-    theta_y = legval2d( x / width, y / height, legder( alpha, axis=1) ) / height
-    out = np.zeros( (2,2) )
-    out[0,0] = - np.sin(theta)*theta_x
-    out[0,1] = - np.sin(theta)*theta_y
-    out[1,0] = np.cos(theta)*theta_x
-    out[1,1] = np.cos(theta)*theta_y
+    theta = legval2d(x / width, y / height, alpha)
+    theta_x = legval2d(x / width, y / height, legder(alpha, axis=0)) / width
+    theta_y = legval2d(x / width, y / height, legder(alpha, axis=1)) / height
+    out = np.zeros((2, 2))
+    out[0, 0] = -np.sin(theta) * theta_x
+    out[0, 1] = -np.sin(theta) * theta_y
+    out[1, 0] = np.cos(theta) * theta_x
+    out[1, 1] = np.cos(theta) * theta_y
     out *= speed
     return out
 
-def rk4_predict( x0, y0, alpha, width, height, speed = 1.0 ):
-    def rk4_step( xy , h ):
-        k1 = ode_function( xy, 0.0, alpha, width, height, speed)
-        k2 = ode_function( xy + h*k1/2, 0.0, alpha, width, height, speed)
-        k3 = ode_function( xy + h*k2/2, 0.0, alpha, width, height, speed)
-        k4 = ode_function( xy + h*k3, 0.0, alpha, width, height, speed)
-        return xy + h*(k1+2*k2+2*k3+k4)/6.0
+def rk4_predict(x0, y0, alpha, width, height, speed=1.0):
+    """
+    Prediction using an RK4 step
+    """
 
-    def in_view( xy):
-        x,y = xy[0],xy[1]
+    def rk4_step(xy, h):
+        """
+        Function for the RK4 step
+        """
+        k1 = ode_function(xy, 0.0, alpha, width, height, speed)
+        k2 = ode_function(xy + h*k1/2, 0.0, alpha, width, height, speed)
+        k3 = ode_function(xy + h*k2/2, 0.0, alpha, width, height, speed)
+        k4 = ode_function(xy + h*k3, 0.0, alpha, width, height, speed)
+        return xy + h * (k1+2*k2+2*k3+k4) / 6.0
+
+    def in_view(xy):
+        """
+        Function checks whether xy tuple is within the scene limits.
+        """
+        x, y = xy[0], xy[1]
         if np.abs(x) < width and np.abs(y) < height:
             return True
         return False
 
-    xy_arr = [ np.array([x0,y0]) ]
-    while in_view( xy_arr[-1] ):
-        xy_arr.append( rk4_step( xy_arr[-1], 0.5 ) )
-    xy_arr = np.array( xy_arr )
-    return xy_arr[:,0], xy_arr[:,1]
+    xy_arr = [np.array([x0, y0])]
+    while in_view(xy_arr[-1]):
+        xy_arr.append(rk4_step(xy_arr[-1], 0.5))
+    xy_arr = np.array(xy_arr)
+    return xy_arr[:, 0], xy_arr[:, 1]
 
 
-def trajectories_to_director_field( trajectories, width, height, step = 10, k_max = 6 ):
+def trajectories_to_director_field(trajectories, width, height, step=10, k_max=6):
     """ Converts a collection of trajectories into a director field
 
     args:
@@ -213,20 +232,23 @@ def trajectories_to_director_field( trajectories, width, height, step = 10, k_ma
     returns:
         alpha (numpy.ndarray) : coeficients for 2D legendre series, shape = (k_max+1, k_max+1)
     """
-    points_ls, directions_ls = zip(*[trajectory_to_directors(traj,step=step) for traj in trajectories ] )
+    points_ls, directions_ls = zip(*[trajectory_to_directors(traj, step=step)
+                                     for traj in trajectories])
     points = np.hstack(points_ls)
-    directions = np.hstack( directions_ls)
-    alpha_guess = np.zeros( (k_max+1, k_max+1) )
-    av_dir = np.power( reduce( lambda x,y: x*y, directions[0]+1j*directions[1]), 1.0 / directions.shape[1])
-    alpha_guess[0,0] = np.log( av_dir ).imag
+    directions = np.hstack(directions_ls)
+    alpha_guess = np.zeros((k_max+1, k_max+1))
+    av_dir = np.power(reduce(lambda x, y: x*y,
+                             directions[0]+1j*directions[1]),
+                      1.0 / directions.shape[1])
+    alpha_guess[0, 0] = np.log(av_dir).imag
     from scipy.optimize import minimize
-    print jac_cost
-    res = minimize( cost, alpha_guess, jac = jac_cost, 
-            args = (points, directions, k_max, width, height),
-            method ='Newton-CG')
+    print(jac_cost)
+    res = minimize(cost, alpha_guess, jac=jac_cost,
+                   args=(points, directions, k_max, width, height),
+                   method='Newton-CG')
     if not res.success:
-        print res.message
-    alpha = res.x.reshape( (k_max+1, k_max+1) )
+        print(res.message)
+    alpha = res.x.reshape((k_max + 1, k_max + 1))
     return alpha
 
 
@@ -238,20 +260,18 @@ def polyfit2d(x, y, f, deg):
     args:
         x (numpy.ndarray) : x coordinates
         y (numpy.ndarray) : y coordinates
-        f (numpy.ndarray) : funtion values 
+        f (numpy.ndarray) : funtion values
         deg (iterable of ints) : (max_degree_x, max_degre_y)
 
     returns:
         c (numpy.ndarray) : array of polynomial coefficients for use with numpy's polyval2d routine
     """
-    from numpy.polynomial import polynomial
-    import numpy as np
     x = np.asarray(x)
     y = np.asarray(y)
     f = np.asarray(f)
     deg = np.asarray(deg)
     vander = polynomial.polyvander2d(x, y, deg)
-    vander = vander.reshape((-1,vander.shape[-1]))
+    vander = vander.reshape((-1, vander.shape[-1]))
     f = f.reshape((vander.shape[0],))
     c = np.linalg.lstsq(vander, f)[0]
     return c.reshape(deg+1)
@@ -259,33 +279,32 @@ def polyfit2d(x, y, f, deg):
 
 
 if __name__ == "__main__":
-    t_span = np.linspace( 0 , np.pi , 40)
-    trajectory = np.vstack( [ np.cos( t_span ) , np.sin(t_span ) ] )
-    points, directions = trajectory_to_directors( trajectory, step=2 )
+    t_span = np.linspace(0, np.pi, 40)
+    trajectory = np.vstack([np.cos(t_span), np.sin(t_span)])
+    points, directions = trajectory_to_directors(trajectory, step=2)
 
-    print "Testing jac_get_angle"
+    print("Testing jac_get_angle")
     k_max = 6
     width = 1.0
     height = 0.5
     k_span = np.arange(k_max+1)
-    alpha = np.zeros((k_max+1,k_max+1))
-    pert = 1e-6*np.random.rand( *alpha.shape )
-    theta1 = get_angle( points, alpha + 0.5*pert, k_max, width, height )
-    theta0 = get_angle( points, alpha - 0.5*pert, k_max, width, height )
+    alpha = np.zeros((k_max + 1, k_max + 1))
+    pert = 1e-6 * np.random.rand(*alpha.shape)
+    theta1 = get_angle(points, alpha + 0.5 * pert, k_max, width, height)
+    theta0 = get_angle(points, alpha - 0.5 * pert, k_max, width, height)
     fd = theta1 - theta0
-    computed = np.einsum('iab,ab', jac_get_angle( points, alpha , k_max, width, height) , pert )
+    computed = np.einsum('iab,ab', jac_get_angle(points, alpha, k_max, width, height), pert)
 
-    print "  finite difference = %g" % fd[3]
-    print "  computed          = %g" % computed[3]
-    print "  error             = %g" % np.abs(fd[3] - computed[3]) 
+    print("  finite difference = %g" % fd[3])
+    print("  computed          = %g" % computed[3])
+    print("  error             = %g" % np.abs(fd[3] - computed[3]))
 
-    print "Testing jac cost"
-    C1 = cost( alpha + 0.5*pert, points, directions , k_max, width, height)
-    C0 = cost( alpha - 0.5*pert, points, directions , k_max, width, height)
+    print("Testing jac cost")
+    C1 = cost(alpha + 0.5 * pert, points, directions, k_max, width, height)
+    C0 = cost(alpha - 0.5 * pert, points, directions, k_max, width, height)
     fd = C1 - C0
-    computed = np.dot(
-            jac_cost( alpha.flatten() , points, directions, k_max, width, height ),
-            pert.flatten() )
-    print "  finite difference = %g" % fd
-    print "  computed          = %g" % computed
-    print "  error             = %g" % np.abs(fd - computed) 
+    computed = np.dot(jac_cost(alpha.flatten(), points, directions, k_max, width, height),
+                      pert.flatten())
+    print("  finite difference = %g" % fd)
+    print("  computed          = %g" % computed)
+    print("  error             = %g" % np.abs(fd - computed))
