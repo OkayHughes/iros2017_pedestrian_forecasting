@@ -1,9 +1,24 @@
+"""Data management module
+
+This module imports and handles generated scenes after they have been learned.
+
+
+Attributes:
+    names (string list): module level variable that contains the names of scenes
+
+    scenes (Scene list): module level variable containing Scene objects that are
+        read from the folder denoted in the config file (in the field "scene_folder")
+
+    sets (list list): module level variable containing the data sets
+        corresponding to the Scenes in `scenes`
+
+"""
+
 import pickle
 import os
 from os.path import join
 import numpy as np
-from process_data import BB_ts_to_curve as bbts
-from util import read_json, root, config
+from util import config
 
 data = 0
 scenes = []
@@ -17,12 +32,10 @@ for file in sorted(os.listdir(folder)):
             scenes.append(scene)
 
     elif file.endswith("_set.pkl"):
-        with open(join(folder, file),'r') as f:
+        with open(join(folder, file), 'r') as f:
             sets.append(pickle.load(f))
 
 names = [x.name for x in scenes]
 
-scene = scenes[0]
-set = sets[0]
-
-
+ex_scene = scenes[0]
+ex_set = sets[0]
