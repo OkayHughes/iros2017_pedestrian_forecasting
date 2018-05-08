@@ -147,7 +147,7 @@ def trajectory_to_directors(trajectory, step=5):
     speed = remove_baddies(speed)
     return np.vstack([x, y]), np.vstack([u, v]) / speed
 
-def ode_function(xy, t, alpha, width, height, speed=1.0):
+def ode_function(xy, alpha, width, height, speed=1.0):
     """ returns velocity feild for input into odeint
 
     args:
@@ -165,7 +165,7 @@ def ode_function(xy, t, alpha, width, height, speed=1.0):
     return out
 
 
-def jac_ode_function(xy, t, alpha, width, height, speed=1.0):
+def jac_ode_function(xy, alpha, width, height, speed=1.0):
     """ returns velocity feild for input into odeint
 
     args:
@@ -198,10 +198,10 @@ def rk4_predict(x0, y0, alpha, width, height, speed=1.0):
         """
         Function for the RK4 step
         """
-        k1 = ode_function(xy, 0.0, alpha, width, height, speed)
-        k2 = ode_function(xy + h*k1/2, 0.0, alpha, width, height, speed)
-        k3 = ode_function(xy + h*k2/2, 0.0, alpha, width, height, speed)
-        k4 = ode_function(xy + h*k3, 0.0, alpha, width, height, speed)
+        k1 = ode_function(xy, alpha, width, height, speed)
+        k2 = ode_function(xy + h*k1/2, alpha, width, height, speed)
+        k3 = ode_function(xy + h*k2/2, alpha, width, height, speed)
+        k4 = ode_function(xy + h*k3, alpha, width, height, speed)
         return xy + h * (k1+2*k2+2*k3+k4) / 6.0
 
     def in_view(xy):
