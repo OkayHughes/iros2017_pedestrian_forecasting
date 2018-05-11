@@ -1,11 +1,13 @@
+"""Base Posteriors Module
+
+Contains elementary probability distributions and helper functions,
+primarily used by derived_posteriors
+
+"""
 import numpy as np
 #from energy import Vk
 from numpy.polynomial import legendre
 from integrate import trap_quad
-from scipy.stats import multivariate_normal
-import pickle
-from scene import Scene
-
 from data import scene
 
 Vk = scene.alpha_arr
@@ -19,8 +21,12 @@ sigma_v = scene.sigma_v
 sigma_L = scene.sigma_L
 
 def set_scene(num_scene, custom_scene=None):
-    global scene, Vk, max_k, s_max, dist_width, vel_width, sigma_x, sigma_v, sigma_l, p_of_lin, scene_scale
-    if custom_scene!=None:
+    """
+    Hack function that sets the global variables when you want to use a non-default scene.
+    """
+    global scene, Vk, s_max, dist_width
+    global vel_width, sigma_x, sigma_v, sigma_L, scene_scale
+    if custom_scene != None:
         scene = custom_scene
     else:
         from data import scenes
@@ -94,10 +100,10 @@ def prob_s_uniform(s):
 _normalization_constants = []
 _bounds = (-0.5*scene_scale[0], 0.5*scene_scale[0], -0.5*scene_scale[1], 0.5*scene_scale[1])
 for coeffs in Vk:
-    fn = lambda x, y: np.exp( -1*legval_scale(x, y, coeffs))
-    _normalization_constants.append(trap_quad(fn, _bounds, res=(400,400)))
+    fn = lambda x, y: np.exp(-1*legval_scale(x, y, coeffs))
+    _normalization_constants.append(trap_quad(fn, _bounds, res=(400, 400)))
 
-def x_given_k(x,k):
+def x_given_k(x, k):
     """
     Returns probability that an agent will be at x given k
 
@@ -107,7 +113,7 @@ def x_given_k(x,k):
     According to the equation (1/Z_K)exp(-1*V_k)
     """
     out = (1.0/_normalization_constants[k])
-    out *= np.exp( -1*legval_scale(x[0], x[1], Vk[k]))
+    out *= np.exp(-1*legval_scale(x[0], x[1], Vk[k]))
     #out *= (x[0] <= scene_scale[0]/2.0)*(x[0] >= -scene_scale[0]/2.0)
     #out *= (x[1] <= scene_scale[1]/2.0)*(x[1] >= -scene_scale[1]/2.0)
     return out
@@ -138,26 +144,24 @@ def v_given_x_lin(v):
     return np.exp(exponent) / (2*np.pi*sigma_L**2)
 
 if __name__ == "__main__":
-    pass
     #test measurement_given_x0, ensure it's constant
 
     print("Actual answer: ")
-    print(x_given_k(np.array([[1, 0], [0,0], [1, 2]]), 0))
-    
+    print(x_given_k(np.array([[1, 0], [0, 0], [1, 2]]), 0))
+
     print("testing x_given_lin:")
-    x = np.zeros((2,3))
-    x[0,1] = scene.width/2.0 + 0.1
-    x[1,2] = scene.height/2.0 + 0.01
+    x = np.zeros((2, 3))
+    x[0, 1] = scene.width / 2.0 + 0.1
+    x[1, 2] = scene.height / 2.0 + 0.01
     print("Computed answer = " + str(x_given_lin(x)))
     expected_answer = [1.0/(scene.width*scene.height), 0.0, 0.0]
     print("Expected answer = " + str(expected_answer))
 
 
-    x_span = np.linspace( - scene_scale[0]/2, scene_scale[0]/2, 200)
-    y_span = np.linspace( - scene_scale[1]/2, scene_scale[1]/2, 200)
-    dvol = (x_span[1]-x_span[0])*(y_span[1]-y_span[0])
-    X,Y = np.meshgrid(x_span, y_span)
-    x_arr = np.vstack( [X.flatten(), Y.flatten() ] )
-    print("\int{P(x|k) dx} =" + str(x_given_k(x_arr,0).sum() * dvol))
+    x_span = np.linspace(-scene_scale[0]/2, scene_scale[0]/2, 200)
+    y_span = np.linspace(-scene_scale[1]/2, scene_scale[1]/2, 200)
+    dvol = (x_span[1] - x_span[0]) * (y_span[1] - y_span[0])
+    X, Y = np.meshgrid(x_span, y_span)
+    x_arr = np.vstack([X.flatten(), Y.flatten()])
+    print("\\int{P(x|k) dx} =" + str(x_given_k(x_arr, 0).sum() * dvol))
     print("Should equal 1")
-
