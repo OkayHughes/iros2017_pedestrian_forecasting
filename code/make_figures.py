@@ -1,11 +1,15 @@
-from distributions import full_model_generator
-from helper_routines import convolve_and_score, stupid_sum
+"""Figure Making Script
+Script that illustrates how to generate figures from trained models.
+"""
+
+from os.path import join
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
+from distributions import full_model_generator
+from helper_routines import convolve_and_score, stupid_sum
 from data import names, scenes
 from varidis import varidis
-from os.path import join
 from util import config
 
 name = "test"
@@ -14,8 +18,8 @@ scene = scenes[names.index(name)]
 
 ref_img = "../annotations/coupa/video2/reference.jpg"
 
-x_hat = np.array([0,0])
-v_hat = np.array([0,-.001])
+x_hat = np.array([0, 0])
+v_hat = np.array([0, -.001])
 t_final = 300
 n_steps = 50
 
@@ -33,7 +37,10 @@ for i in range(ctx):
                        -1 * bounds[1]/2.0 + width * j, -1 * bounds[1]/2.0 + width * (j+1)])
 
 for ind, ((nl_pos, nl_weights), (lin_pos, lin_weights)) in enumerate(gen):
-    msh = convolve_and_score(nl_pos, nl_weights, scene.kappa * (float(ind)/n_steps) * t_final, bboxes)
+    msh = convolve_and_score(nl_pos,
+                             nl_weights,
+                             scene.kappa * (float(ind)/n_steps) * t_final,
+                             bboxes)
     msh += stupid_sum(lin_pos, lin_weights, bboxes)
     msh = msh.reshape((ctx, cty))
 
@@ -41,10 +48,5 @@ for ind, ((nl_pos, nl_weights), (lin_pos, lin_weights)) in enumerate(gen):
 
     extent = [-scene.width/2, scene.width/2, -scene.height/2, scene.height/2]
     plt.imshow(img, extent=extent)
-    plt.imshow(msh, a=0.5, cmap=varidis, extent = extent)
+    plt.imshow(msh, a=0.5, cmap=varidis, extent=extent)
     plt.savefig(join(config["output_folder"], "frame_{}.png".format(ind)))
-    
-
-
-
-
