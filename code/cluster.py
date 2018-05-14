@@ -80,8 +80,8 @@ def prune_cluster(cluster):
     lengths = map(length_of_traj, cluster)
     lengths = sorted(lengths)
     #Compute IQR
-    Q1 = lengths[n/4]
-    Q3 = lengths[3*n/4]
+    Q1 = lengths[n//4]
+    Q3 = lengths[3*n//4]
     IQR = Q3-Q1
 
     #Compute which to discard and count hoe many agents you discard
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     print("Testing clustering routine")
     import process_data
     folder = '../annotations/bookstore/video3/'
-    BB_ts_list, width, height = process_data.get_BB_ts_list(folder, label="Biker")
+    BB_ts_list, width, height = process_data.get_BB_ts_list(folder)
     curve_list = map(process_data.BB_ts_to_curve, BB_ts_list)
 
     import matplotlib.pyplot as plt
