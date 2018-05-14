@@ -6,7 +6,7 @@ are referenced by an assortment of other modules.
 """
 
 import numpy as np
-from scipy.special import erf
+from scipy.special import erf # pylint: disable=no-name-in-module
 
 
 
