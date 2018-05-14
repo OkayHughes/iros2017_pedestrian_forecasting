@@ -62,7 +62,7 @@ def integrate_class(k, x0, T, N_steps):
         """
         Generates vector field at gridpoints `x` at time `t` for odeint.
         """
-        x = x.reshape(2, len(x) / 2) + 0 * t
+        x = x.reshape(2, len(x) // 2) + 0 * t
         return s_max * scene.director_field_vectorized(k, x).flatten()
 
     # Integrate the ODE backwards in time
@@ -162,7 +162,7 @@ def full_model_generator(scene_name, x_hat, v_hat, t_final, N_steps, convolve=Fa
         #x_out = np.concatenate( [x_out, x_lin], axis=1)
         #w_out = np.concatenate( [w_out, w_lin])
         prob_of_mu = w_out.sum() + w_lin.sum()
-        yield (x_out, w_out/ prob_of_mu), (x_lin, w_lin/prob_of_mu)
+        yield (x_out, w_out / prob_of_mu), (x_lin, w_lin / prob_of_mu)
 
 def linear_generator(name, x_hat, v_hat, t_final, N_steps):
     """
