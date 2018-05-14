@@ -83,7 +83,7 @@ def get_BB_ts_list(folder):
     length_list = sorted(map(length, BB_ts_list))
     n = len(length_list)
     print("n = {n}".format(n=n))
-    Q1, Q3 = length_list[n / 4], length_list[3 * n / 4]
+    Q1, Q3 = length_list[n//4], length_list[3*n//4]
     IQR = Q3 - Q1
     BB_ts_list = filter(lambda BB_ts: (length(BB_ts) < Q3 + 1.5 * IQR and
                                        length(BB_ts) > Q1 - 1.5*IQR), BB_ts_list)
@@ -136,7 +136,7 @@ def get_std_measurement_noise(curve_ls):
     smooth = lambda x: signal.convolve(x, kernel, mode='valid')
     smooth_curve_ls = [np.vstack([smooth(c[0]), smooth(c[1])])
                        for c in curve_ls]
-    error_ls = [c[:, M/2:len(c[0]) - M / 2 + 1] - sc # pylint: disable=invalid-slice-index
+    error_ls = [c[:, M//2:len(c[0]) - M // 2 + 1] - sc
                 for c, sc in zip(curve_ls, smooth_curve_ls)]
     return np.hstack(error_ls).std()
 
