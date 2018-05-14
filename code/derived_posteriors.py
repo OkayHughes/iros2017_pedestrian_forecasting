@@ -6,7 +6,7 @@ Note that before using these posteriors, set_scene needs to be called.
 
 """
 import numpy as np
-from scipy.special import erf
+from scipy.special import erf  # pylint: disable=no-name-in-module
 import posteriors
 from integrate import trap_quad
 
