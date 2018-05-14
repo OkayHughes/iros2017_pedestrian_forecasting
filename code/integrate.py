@@ -20,7 +20,7 @@ def trap_quad(integrand, bounds, res=None):
     """
 
     if res is None:
-        res = (len(bounds)/2)*(100,)
+        res = (len(bounds)//2)*(100,)
     if isinstance(res, int):
         res = (res,)
     assert len(res)*2 is len(bounds)
