@@ -50,13 +50,12 @@ def cluster_trajectories(curves):
         for j in range(i+1, n_curves):
             aff[i, j] = np.exp(-distance_metric(X_2B_clstrd[i], X_2B_clstrd[j])**2)
             aff[j, i] = aff[i, j]
-
     #clusterer.Affinity = aff
     cluster_labels = clusterer.fit_predict(aff)
     out = []
     for label in set(cluster_labels):
-        cluster = map(lambda k: curves[k],
-                      filter(lambda k: cluster_labels[k] == label, range(n_curves)))
+        cluster = list(map(lambda k: curves[k],
+                           filter(lambda k: cluster_labels[k] == label, range(n_curves))))
         out.append(cluster)
 
     return list(map(align_cluster, out))
@@ -88,10 +87,10 @@ def prune_cluster(cluster):
     keep_it = lambda traj: (length_of_traj(traj) < Q3+1.5*IQR and
                             length_of_traj(traj) > Q1-1.5*IQR)
     bool2int = lambda b: 1 if b else 0
-    n_keep = reduce(lambda x, y: x+y, map(bool2int, map(keep_it, cluster)))
+    n_keep = reduce(lambda x, y: x+y, list(map(bool2int, map(keep_it, cluster))))
     n_discarded = len(cluster) - n_keep
 
-    return n_discarded, filter(keep_it, cluster)
+    return n_discarded, list(filter(keep_it, cluster))
 
 def merge_small_clusters(clusters):
     """ returns clusters where each has a minimum size and one cluster is just a linear predictor
@@ -104,7 +103,7 @@ def merge_small_clusters(clusters):
     """
     new_clusters = []
     n_discarded = 0
-    N_curves = reduce(lambda x, y: x+y, map(len, clusters))
+    N_curves = reduce(lambda x, y: x+y, list(map(len, clusters)))
     portion = [len(c) / float(N_curves) for c in clusters]
     for k, cl in enumerate(clusters):
         if len(cl) < 3 or portion[k] < 0.03:
@@ -212,9 +211,9 @@ def get_classes(curves, width, height, k_max=4):
 
     #Compute P_of_c
     P_of_c = np.ones(len(clusters) + 1)
-    n_agents = n_discarded + reduce(lambda x, y: x+y, map(len, clusters))
+    n_agents = n_discarded + reduce(lambda x, y: x+y, list(map(len, clusters)))
     P_of_c[-1] = n_discarded / float(n_agents)
-    P_of_c[:len(clusters)] = map(lambda c: len(c)/float(n_agents), clusters)
+    P_of_c[:len(clusters)] = list(map(lambda c: len(c)/float(n_agents), clusters))
 
     #Resetting P_of_c to a uniform distirbution
     #P_of_c /= P_of_c.size
@@ -230,7 +229,8 @@ if __name__ == "__main__":
     import process_data
     folder = '../annotations/bookstore/video3/'
     BB_ts_list, width, height = process_data.get_BB_ts_list(folder)
-    curve_list = map(process_data.BB_ts_to_curve, BB_ts_list)
+    print(len(BB_ts_list))
+    curve_list = list(map(process_data.BB_ts_to_curve, BB_ts_list))
 
     import matplotlib.pyplot as plt
     for curve in curve_list:
