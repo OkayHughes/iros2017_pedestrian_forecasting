@@ -40,12 +40,11 @@ def get_BB_ts_list(folder):
 
     ids = set(data[data['label'] == label]['id'])
     BB_ts_list = [data[data['id'] == id].loc[:, 'x1':'y2'].values.transpose() for id in ids] # pylint: disable=invalid-slice-index
-
     # RESCALE SO WIDTH = 1.0
     offset = np.array([0.5, height / (2 * float(width)),
                        0.5, height / (2 * float(width))]).reshape(4, 1)
     transformation = lambda BB_ts: BB_ts / float(width) - offset
-    BB_ts_list = map(transformation, BB_ts_list)
+    BB_ts_list = list(map(transformation, BB_ts_list))
     width, height = 1.0, height/ float(width)
 
     def enters_and_leaves(BB_ts):
@@ -59,7 +58,8 @@ def get_BB_ts_list(folder):
         enters = outside(*list(BB_ts[:, 0]))
         leaves = outside(*list(BB_ts[:, -1]))
         return enters and leaves
-    BB_ts_list = filter(enters_and_leaves, BB_ts_list)
+    BB_ts_list = list(filter(enters_and_leaves, BB_ts_list))
+    print(len(BB_ts_list))
 
     def distant_endpoints(BB_ts):
         """
@@ -68,7 +68,7 @@ def get_BB_ts_list(folder):
         dx = BB_ts[0, 0] - BB_ts[0, -1]
         dy = BB_ts[1, 0]- BB_ts[1, -1]
         return dx**2 + dy**2 > width*height*0.01
-    BB_ts_list = filter(distant_endpoints, BB_ts_list)
+    BB_ts_list = list(filter(distant_endpoints, BB_ts_list))
 
     def length(BB_ts):
         """
@@ -85,8 +85,8 @@ def get_BB_ts_list(folder):
     print("n = {n}".format(n=n))
     Q1, Q3 = length_list[n//4], length_list[3*n//4]
     IQR = Q3 - Q1
-    BB_ts_list = filter(lambda BB_ts: (length(BB_ts) < Q3 + 1.5 * IQR and
-                                       length(BB_ts) > Q1 - 1.5*IQR), BB_ts_list)
+    BB_ts_list = list(filter(lambda BB_ts: (length(BB_ts) < Q3 + 1.5 * IQR and
+                                            length(BB_ts) > Q1 - 1.5*IQR), BB_ts_list))
     return BB_ts_list, width, height
 
 def get_bbox_width(BB_ts_ls):

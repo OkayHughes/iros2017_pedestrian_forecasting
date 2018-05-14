@@ -36,9 +36,9 @@ def trap_quad(integrand, bounds, res=None):
     grid = np.meshgrid(*[np.linspace(lower_bnds[k], upper_bnds[k], res[k])
                          for k in range(len(res))])
     dV = reduce(lambda x, y: x * y,
-                map(lambda mn, mx, r: (mx - mn) / float(r - 1),
-                    lower_bnds, upper_bnds, res))
-    weights = dV*reduce(np.outer, map(weights_func, res))
+                list(map(lambda mn, mx, r: (mx - mn) / float(r - 1),
+                    lower_bnds, upper_bnds, res)))
+    weights = dV*reduce(np.outer, list(map(weights_func, res)))
     return np.einsum('i,i', weights.flatten(), integrand(*grid).flatten())
 
 if __name__ == '__main__':

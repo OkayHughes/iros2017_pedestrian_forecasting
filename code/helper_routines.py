@@ -209,7 +209,7 @@ if __name__ == "__main__":
     x_max_ls = list(X_grid.flatten() + 0.1)
     y_min_ls = list(Y_grid.flatten() - 0.1)
     y_max_ls = list(Y_grid.flatten() + 0.1)
-    bbox_ls = zip(x_min_ls, x_max_ls, y_min_ls, y_max_ls)
+    bbox_ls = list(zip(x_min_ls, x_max_ls, y_min_ls, y_max_ls))
     from time import time
     t0 = time()
     score = convolve_and_score(pts, weights, sigma, bbox_ls)

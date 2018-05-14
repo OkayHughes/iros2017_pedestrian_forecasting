@@ -52,7 +52,7 @@ class Scene():
             k_max_vf : int
         """
         #Learn the top speed
-        curve_ls = map(process_data.BB_ts_to_curve, BB_ts_ls)
+        curve_ls = list(map(process_data.BB_ts_to_curve, BB_ts_ls))
         def top_speed(curve):
             """
             Return maximum scalar speed from a curve

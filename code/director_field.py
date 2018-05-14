@@ -232,8 +232,8 @@ def trajectories_to_director_field(trajectories, width, height, step=10, k_max=6
     returns:
         alpha (numpy.ndarray) : coeficients for 2D legendre series, shape = (k_max+1, k_max+1)
     """
-    points_ls, directions_ls = zip(*[trajectory_to_directors(traj, step=step)
-                                     for traj in trajectories])
+    points_ls, directions_ls = list(zip(*[trajectory_to_directors(traj, step=step)
+                                     for traj in trajectories]))
     points = np.hstack(points_ls)
     directions = np.hstack(directions_ls)
     alpha_guess = np.zeros((k_max+1, k_max+1))
