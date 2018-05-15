@@ -6,7 +6,7 @@ Module contains the function for training scenes from data using default paramet
 from sys import argv
 from os.path import join
 import pickle
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
 from scene import Scene
 from util import read_json, config
@@ -33,11 +33,11 @@ def make_scene(folder):
 
     print("sum(P(k)) = {}".format(test_scene.P_of_c.sum()))
     print("Pickling scene and test set.")
-    with open(join(scene_dir, "{}_scene.pkl").format(prefix), "w") as f:
+    with open(join(scene_dir, "{}_scene.pkl").format(prefix), "wb") as f:
         pickle.dump(test_scene, f)
         print("Pickled scene")
 
-    with open(join(scene_dir, "{}_set.pkl").format(prefix), "w") as f:
+    with open(join(scene_dir, "{}_set.pkl").format(prefix), "wb") as f:
         pickle.dump(test_set, f)
         print("Pickled the test set with {} agents".format(len(test_set)))
 
