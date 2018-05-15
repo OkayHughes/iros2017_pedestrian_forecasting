@@ -17,11 +17,12 @@ def classifier(bounds, width, rho, sigma_x):
     """
     takes:
     bounds: [width, height]
+    width: float, width of a box
     rho: (np.array(n_points, 2), np.array(n_points))
     tau: float
-    returns: float array #NOTE hoj:  This does not output a bool, as written
+    returns: float array
     """
-
+    print(bounds)
     ctx = int(np.ceil(bounds[0]/width))
     cty = int(np.ceil(bounds[1]/width))
 
@@ -58,8 +59,7 @@ def classifier(bounds, width, rho, sigma_x):
     #        end = pts_x[1].searchsorted(uby)
     #        sums.append(weights_x[start:end].sum())
 
-    #print(res + integrals)[np.where(res + integrals > tau)[0]][36:]
-    #printE[np.where(res + integrals > tau)[0]]
+
     sums = np.array(sums)
     return sums, bboxes
 
@@ -244,15 +244,15 @@ if __name__ == "__main__":
 
 
     #Test dirac deltas
-
-    tau = 0.001
     rho = (np.array([[0.5, 0.5], [-0.5, -0.5]]), np.array([0.2, 0.1]))
-    E = np.array([[[.01, .01], [.5, .495]], [[.01, .01], [-.5, -.495]]])
+    bounds = (1, 1)
+    width = 0.5
+
     def fn(x, y):
         x = x.flatten()
         return np.zeros(len(x))
-    print("should return [False, True, True]:")
-    print(classifier(E, rho, tau, fn))
+    print("should return [True, False, True, False]:")
+    print(classifier(E, rho, fn))
 
     assert False
 
