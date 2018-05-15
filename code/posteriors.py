@@ -154,7 +154,7 @@ if __name__ == "__main__":
     x[0, 1] = scene.width / 2.0 + 0.1
     x[1, 2] = scene.height / 2.0 + 0.01
     print("Computed answer = " + str(x_given_lin(x)))
-    expected_answer = [1.0/(scene.width*scene.height), 0.0, 0.0]
+    expected_answer = [1.0/(scene.width*scene.height), 1.0/(scene.width*scene.height), 1.0/(scene.width*scene.height)]
     print("Expected answer = " + str(expected_answer))
 
 
