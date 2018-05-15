@@ -10,7 +10,7 @@ Ensure that `scipy` is the most recent version available on your OS.
 
 ## Usage ##
 
-The `train_example.py` file in `code/example` will train a sample model, and show how to plot the relevant quantities that are calculated by our model. 
+The `train_example.py` file in `code/example` will train a sample model, and show how to plot the relevant quantities that are calculated by our model.  Note that this script should be invoked from the main code directory, i.e. run `python3 examples/train_example/py`.
 
 ### Making sure your data is formatted correctly ###
 
