@@ -208,19 +208,21 @@ if __name__ == '__main__':
     #Domain is actually larger than the domain we care about
     domain = [-scene.width, scene.width, -scene.height, scene.height]
 
-    gen = full_model_generator("asdf_scene", x_hat, v_hat, t_final, N_steps)
+    gen = full_model_generator("test", x_hat, v_hat, t_final, N_steps)
     n = 0
-    from visualization_routines import singular_distribution_to_image
+    from visualization import singular_distribution_to_image
+    plt.ion()
     res = (50, 60)
-    for x_arr, w_arr in gen:
+    for (x_nl_arr, w_nl_arr), (x_lin_arr, w_lin_arr) in gen:
         if n%5 == 0:
-            X, Y, Z = singular_distribution_to_image(x_arr,
-                                                     w_arr,
+            X, Y, Z = singular_distribution_to_image(x_nl_arr,
+                                                     w_nl_arr,
                                                      domain,
                                                      res=res)
             plt.contourf(X, Y, Z, 20, cmap='viridis')
             plt.plot(curve[0], curve[1])
             plt.scatter(curve[0, offset], curve[1, offset])
             plt.show()
+            plt.pause(0.02)
             plt.clf()
         n += 1
