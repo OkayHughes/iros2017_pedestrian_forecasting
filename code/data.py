@@ -32,7 +32,7 @@ for file in sorted(os.listdir(folder)):
             scenes.append(scene)
 
     elif file.endswith("_set.pkl"):
-        with open(join(folder, file), 'r') as f:
+        with open(join(folder, file), 'rb') as f:
             sets.append(pickle.load(f))
 
 names = [x.name for x in scenes]
