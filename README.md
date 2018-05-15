@@ -43,7 +43,7 @@ Then run `python make_scene.py path/to/folder`, and pass the path to the folder 
 
 ### Generating results ###
 
-The scene that's generated has dimensions `[1.0, height/width]`, centered at `[0,0]`. This determines the units that you pass into the model. Our model implementation preserves the units you pass into it.
+The scene that's generated has dimensions `[1.0, height_in_pixels/width_in_pixels]`, centered at `[0,0]`. This determines the units that you pass into the model. Our model implementation preserves the units you pass into it.
 
 The inputs to the model are the name of the scene you want to use, the position measurement (a 1x2 numpy array) that's measured in the scene dimensions listed above, the velocity measured in units/frame (1x2 numpy array), the time horizon you're simulating over (float), and the number of steps to simulate (int).
 
@@ -68,10 +68,14 @@ for ((nl_pts_n, nl_wts_n), (linear_pts_n, linear_wts_n)) in gen:
 The output of the model is a tuple `((non_linear_points, non_linear_weights), (linear_points, linear_weights))`. Each points array is of size `(2, N)`, which means the array looks like `[[x1, x2, x3, x4, ...], [y1, y2, y3, y4, ...]]`. Each of the weights arrays are of size `(N)`, each of which correspond to one of the points in the point arrays.
 
 ** _The non-linear output must be convolved with the gaussian distribution described here in order to be correct. _ ** This is why the different points are split into two outputs. The linear points are treated as dirac deltas, so the probability of a pedestrian being in a set A is just the sum of the dirac deltas in that set. 
-
 The non-linear weights are treated as dirac deltas convolved with gaussians of standard deviation `scene.kappa * (n / n_steps) * t_final`, where n corresponds to the number of frames that have come from the generator. The `convolve_and_score` method from `helper_routines` takes a set of points, weights, the standard deviation, and a set of bounding boxes to integrate over, and returns the convolved integral over those boxes. If you know the form, you can likely extend and improve what we've put together.
 
 
+## Clustering
+
+One of the most dataset-dependent parts of our algorithm is the `cluster_trajectories` function in cluster.py. We tested our algorithm on the Stanford Drone Dataset, which has a large number of trajectories, and is hand-annotated so that the trajectories are of high quality (for example trajectories are contiguous, pedestrians are annotated right as they enter the scene, etc...). The clustering algorithm that we use leverages this. There are a large number of trajectory-clustering methods out there, but our paper does not contribute a novel algorithm. Rather, it is the responsibility of the user to find a clustering algorithm that is best suited to the quality data that they use.
+
+Replacing the `cluster_trajectories` method in cluster.py with whatever clustering method works best for your data should be all you need to do. If you do so, make sure to use the `align_trajectories` method on your clusters in order to ensure that the grouped trajectories point the same way.
 
 ## Reproduce
 
