@@ -4,6 +4,7 @@ Contains methods for visualizing distributions and clusters.
 import numpy as np
 import matplotlib.pyplot as plt
 import posteriors
+from evaluation import classifier, classifier_no_convolve
 
 def visualize_cluster(scene, k):
     """ Displays a plot of all the clusters and there potential functions
@@ -41,56 +42,81 @@ def visualize_cluster(scene, k):
     plt.show()
     return -1
 
-#TODO: add method for convolved distribution
-def singular_distribution_to_image(pts, weights, domain, res=(50, 50)):
+def singular_distribution_to_image(pts, weights, width, domain):
     """ Converts a singular distribution into an image for plotting.
 
     args:
         pts: np.array.shape = (2,N)
         weights: np.array.shape = (N,)
-        domain: (x_min, x_max, y_min, y_max)
-
-    kwargs:
-        res: (uint, uint)
+        width: float, width of the individual boxes to sum over
+        domain: (width, height)
 
     returns:
-        np.array.shape = (res[0], res[1])
+        np.array.shape = (domain[0]//width, domain[1]//width), x positions of bounding box centers
+        np.array.shape = (domain[0]//width, domain[1]//width), y positions of bounding box centers
+        np.array.shape = (domain[0]//width, domain[1]//width), probability associated with bbox
     """
-    #Sort the points and weights by the x-component of each point
-    indices = np.argsort(pts[0])
-    pts = pts[:, indices]
-    weights = weights[indices]
+    sums, bboxes = classifier_no_convolve(domain, width, (pts, weights))
+    ctx, cty = int(np.ceil(domain[0]/width)), int(np.ceil(domain[1]/width))
+    xs = (bboxes[:, 0] + bboxes[:, 1])/2
+    ys = (bboxes[:, 2] + bboxes[:, 3])/2
+    sums = sums.reshape(ctx, cty)
+    xs = xs.reshape(ctx, cty)
+    ys = ys.reshape(ctx, cty)
+    return xs, ys, sums
 
-    #Partition space
-    partition_x = np.linspace(domain[0], domain[1], res[0] + 1)
-    partition_y = np.linspace(domain[2], domain[3], res[1] + 1)
+def convolved_distribution_to_image(pts_nl, weights_nl, width, domain, sigma_x):
+    """ Converts a singular distribution into an image for plotting.
 
-    #Initialize output array
-    X, Y = np.meshgrid(0.5*(partition_x[1:] + partition_x[:-1]),
-                       0.5*(partition_y[1:] + partition_y[:-1]),
-                       indexing='ij')
-    Z = np.zeros(res)
+    args:
+        pts_nl: np.array.shape = (2,N)
+        weights_nl: np.array.shape = (N,)
+        pts_lin: np.array.shape = (2,N)
+        weights_lin: np.array.shape = (N,)
+        width: float, width of the individual bounding boxes
+        domain: (width, height)
 
-    #For each box of the partition, find the points in the box
-    for i in range(res[0]):
-        lbx = partition_x[i]
-        ubx = partition_x[i+1]
-        start = pts[0].searchsorted(lbx)
-        end = pts[0].searchsorted(ubx)
-        pts_x = pts[:, start:end]
-        weights_x = weights[start:end]
+    returns:
+        np.array.shape = (domain[0]//width * domain[1]//width)
+        np.array.shape = (domain[0]//width, domain[1]//width)
+    """
+    sums, bboxes = classifier(domain, width, (pts_nl, weights_nl), sigma_x)
+    ctx, cty = int(np.ceil(domain[0]/width)), int(np.ceil(domain[1]/width))
+    xs = (bboxes[:, 0] + bboxes[:, 1])/2
+    ys = (bboxes[:, 2] + bboxes[:, 3])/2
+    sums = sums.reshape(ctx, cty)
+    xs = xs.reshape(ctx, cty)
+    ys = ys.reshape(ctx, cty)
+    return xs, ys, sums
 
-        #Sort with respect to y-component
-        indices = np.argsort(pts_x[1])
-        pts_x = pts_x[:, indices]
-        weights_x = weights_x[indices]
-        for j in range(res[1]):
-            lby = partition_y[j]
-            uby = partition_y[j+1]
-            start = pts_x[1].searchsorted(lby)
-            end = pts_x[1].searchsorted(uby)
-            Z[i, j] = weights_x[start:end].sum()
-    return X, Y, Z
+def visualize_generator(generator, scene, t_final, N_max, width):
+    """Visualizes a distribution generator
+    args:
+        generator: generator returned from full_model_generator
+            Note: consumes generator
+        t_final: float, time of final prediction
+        N_max: int, max number of frames returned from generator
+    """
+    domain = (scene.width, scene.height)
+    kappa = scene.kappa
+    plt.ion()
+    for n, ((x_nl_arr, w_nl_arr), (x_lin_arr, w_lin_arr)) in enumerate(generator):
+        conv = convolved_distribution_to_image(x_nl_arr,
+                                               w_nl_arr,
+                                               width,
+                                               domain,
+                                               kappa * n * t_final / N_max)
+        lin = singular_distribution_to_image(x_lin_arr,
+                                             w_lin_arr,
+                                             width,
+                                             domain)
+
+        X, Y, Z = conv[0], conv[1], conv[2] + lin[2]
+        plt.pcolormesh(X, Y, Z, cmap='viridis')
+        plt.show()
+        plt.pause(0.02)
+        plt.clf()
+
 
 if __name__ == '__main__':
     from data import scene
@@ -101,9 +127,9 @@ if __name__ == '__main__':
     pts = np.random.randn(2, weights.size)
     pts[1] *= 0.5
     pts[0] += 0.5
-    domain = (-2, 2, -2, 2)
+    domain = (4, 4)
     res = (30, 20)
-    X, Y, Z = singular_distribution_to_image(pts, weights, domain, res=res)
+    X, Y, Z = singular_distribution_to_image(pts, weights, 0.02, domain)
     plt.contourf(X, Y, Z, 30, cmap='viridis')
     plt.title('Should be a Gaussian with $\\mu = (0.5,0.0), \\sigma_x=1.0, \\sigma_y=0.5$')
     plt.show()
